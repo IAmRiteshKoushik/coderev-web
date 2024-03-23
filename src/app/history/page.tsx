@@ -1,5 +1,5 @@
 // pages/index.tsx
-import CodeObjectComponent from "../_components/CodeObjectComponents";
+import CodeObjectComponent from "./_components/CodeObjectComponents";
 import { codeObjects } from "../utils/data";
 
 const HomePage = () => {
