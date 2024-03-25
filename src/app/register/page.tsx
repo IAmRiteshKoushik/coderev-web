@@ -1,6 +1,7 @@
 "use client"
 import { useState } from 'react';
 
+
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
@@ -8,11 +9,17 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMatchError, setPasswordMatchError] = useState(false);
 
   const handleRegister = () => {
-    // Implement your registration logic here
+    if (password !== confirmPassword) {
+      setPasswordMatchError(true);
+      return;
+    }
+    setPasswordMatchError(false);
+
     console.log('Registering with:', firstName, lastName, email, username, password);
-    // After successful registration, you can redirect the user to the login page
     window.location.href = '/login';
   };
 
@@ -105,6 +112,27 @@ const Register = () => {
             )}
           </button>
         </div>
+        
+        <div>
+    <input
+      type={showPassword ? "text" : "password"}
+      placeholder="Confirm Password"
+      className={`w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 text-black ${
+        passwordMatchError ? 'border-red-500' : ''
+      }`}
+      value={confirmPassword}
+      onChange={(e) => {
+        setConfirmPassword(e.target.value);
+        if (passwordMatchError) {
+          setPasswordMatchError(false);
+        }
+      }}
+    />
+    
+    {passwordMatchError && (
+      <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+    )}
+  </div>
         <button
           className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 focus:outline-none"
           onClick={handleRegister}
