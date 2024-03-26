@@ -1,96 +1,168 @@
 "use client"
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
+import { z } from "zod";
+
+import { Toast } from 'primereact/toast';
+import "primereact/resources/primereact.min.css";
+import "primereact/resources/themes/lara-light-blue/theme.css"
+import { LOGIN_URL } from '../_utils/constants';
+import secureLocalStorage from 'react-secure-storage';
+import hashPassword from '../_utils/hash';
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    // Implement your login logic here
-    console.log('Logging in with:', username, password);
-  };
+    useEffect(() => {
+        secureLocalStorage.clear();
+    }, []);
+
+    const [userEmail, setUserEmail] = useState('');
+    const [userPassword, setUserPassword] = useState('');
+
+    const toast = useRef<Toast>(null);
+    const router = useRouter();
+
+    const alertError = (summary: string, detail: string) => {
+        toast.current?.show({
+            severity: 'error',
+            summary: summary,
+            detail: detail,
+        });
+    };
+
+    const alertSuccess = (summary: string, detail: string) => {
+        toast.current?.show({
+            severity: 'success',
+            summary: summary,
+            detail: detail,
+        });
+    };
+
+    // Validators
+    const isValidEmail = z.string().email().min(1).max(320).safeParse(userEmail);
+    const isValidPassword = z.string().min(8).max(32).safeParse(userPassword);
+
+    const handleLogin = async (e: any) => {
+        e.preventDefault();
+
+        // Guard Clauses
+        if (!isValidEmail.success){
+            alertError('Invalid Email ID', 'Please enter a valid Email ID!');
+            return;
+        }
+        if (!isValidPassword.success){
+            alertError('Invalid Password', 'Please enter a valid Password');
+            return;
+        }
+
+        try {
+            const response = await fetch(LOGIN_URL, {
+                method: "POST",
+                headers: {
+                    "Content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    userEmail: userEmail,
+                    userPassword: hashPassword(userPassword),
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.status === 200){
+                alertSuccess("Login Successful!", "Redirecting to Dashboard...");
+                secureLocalStorage.clear();
+                secureLocalStorage.setItem("userAccess", data["SECRET_TOKEN"]);
+                secureLocalStorage.setItem("currentUser", JSON.stringify({
+                    // Response data goes here
+                }));
+                setTimeout(() => {
+                    router.push("/dashboard");
+                }, 2000);
+            } else if (response.status === 500){
+                alertError("Oops!", "Something went wrong! Please try again later!");
+            // } else if (data.message === undefined || data.message === null){
+            //     alertError("Oops!", "Something went wrong! Please try again later!");
+            } else {
+                alertError("Oops!", "Something went wrong! Please try again later!");
+            }
+        } catch (error){
+            console.log(error);
+            alertError("Oops!", "Something went wrong! Please try again later!");
+        }
+    };
 
   return (
-    <div className="bg-black min-h-screen flex items-center justify-center">
-      <div className="bg-black max-w-md w-full p-8 rounded-lg shadow-md border border-white space-y-4">
-        <h2 className="text-2xl font-semibold text-center">Login</h2>
-        <div>
-          <input
-            type="text"
-            placeholder="Username"
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 text-black"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-        <div className="relative">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-green-500 text-black"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 focus:outline-none"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v.01M12 8V4v4zm0 8v4v-4zm-6 4h4-4zm12 0h4-4zm-8-8H4h4zm12 0h-4 4zm-8 0v-4 4zm0-8V4v4z"
-                />
-              </svg>
-            )}
-          </button>
-        </div>
-        <button
-          className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 font-bold focus:outline-none"
-          onClick={handleLogin}
-        >
-          Login
-        </button>
-        <div className="text-center">
-          <p>
-            Don't have an account already? <a href="/register">Register</a>
-          </p>
-          <p>
-            <a href="#">Forgot password?</a>
-          </p>
-        </div>
-      </div>
-    </div>
+    <main className="bg-slate-100 min-h-screen flex items-center justify-center">
+        <Toast position='bottom-center' ref={toast}/>
+            <div className='border-slate-400 border-2 p-10 rounded-md bg-slate-200'>
+                <h1 className=' font-bold text-2xl p-2 text-center'> Sign In </h1>
+                <form className='space-y-6' onSubmit={handleLogin}>
+                    {/* Username */}
+                    <div>
+                        <label className='block text-md font-medium leading-6 text-black'>
+                            Email ID
+                        </label>
+                        <div>
+                            <input
+                                type="email"
+                                autoComplete="email"
+                                placeholder='Enter your Email ID'
+                                onChange={(e) => setUserEmail(e.target.value.toLowerCase())}
+                                className={"block text-lg w-full rounded-md py-2 px-2 text-black shadow-sm ring-1 ring-inset ring-bGray placeholder:text-gray-400 sm:text-md sm:leading-6 !outline-none" +
+                                    (!isValidEmail.success && userEmail ? ' ring-red-500' : isValidEmail.success && userEmail ? ' ring-green-500' : ' ring-bGray')}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                        <div className="flex items-center justify-between">
+                            <label className="block text-md font-medium leading-6 text-black">
+                                Password
+                            </label>
+                            <div className="text-md">
+                                <Link replace={true} href={"/forgotPassword"} className="font-medium text-blue-600 hover:underline">
+                                    Forgot password?
+                                </Link>
+                            </div>
+                        </div>
+                        <div className="mt-2">
+                            <input
+                                type="password"
+                                autoComplete="current-password"
+                                placeholder='Enter your Password'
+                                className={"block text-lg w-full rounded-md border-0 \
+                                    py-2 px-2 text-black shadow-sm ring-1 \
+                                    ring-inset ring-bGray placeholder:text-gray-400 \
+                                    sm:text-md sm:leading-6 !outline-none" 
+                                    + (!isValidPassword.success && userPassword ? 
+                                        ' ring-red-500' : isValidPassword.success 
+                                            && userPassword ? 
+                                            ' ring-green-500' : ' ring-bGray')}
+                                onChange={(e) => setUserPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>            
+
+                    {/* No Account */}
+                    <p className="mt-10 text-center text-md text-gray-500">
+                        {"Don't have an account? "}
+                        <Link className="font-medium leading-6 text-blue-600 hover:underline" href="/register">Register</Link>
+                    </p>
+                    <div>
+                        <input
+                            value="Sign In"
+                            type="submit"
+                            className={"w-full text-lg rounded-lg bg-black text-white p-2 cursor-pointer"} 
+                        />
+                    </div>
+                </form>
+            </div>
+    </main>
   );
 };
 
