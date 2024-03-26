@@ -1,27 +1,124 @@
 "use client"
-import { useState } from 'react';
 
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
+import { Toast } from "primereact/toast";
+import { SelectButton } from "primereact/selectbutton";
+import "primereact/resources/primereact.min.css";
+import "primereact/resources/themes/lara-light-blue/theme.css"
+import secureLocalStorage from 'react-secure-storage';
+
+import { hashPassword } from "../_utils/hash";
+import { REGISTER_URL } from '../_utils/constants';
 
 const Register = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordMatchError, setPasswordMatchError] = useState(false);
 
-  const handleRegister = () => {
-    if (password !== confirmPassword) {
-      setPasswordMatchError(true);
-      return;
+    useEffect(() => {
+        secureLocalStorage.clear();
+    }, []);
+
+    const toast = useRef<Toast>(null);
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    const [passwordMatchError, setPasswordMatchError] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // Regular expressions for matching
+
+    const router = useRouter();
+
+    const isValid = () => {
+
     }
-    setPasswordMatchError(false);
 
-    console.log('Registering with:', firstName, lastName, email, username, password);
-    window.location.href = '/login';
-  };
+    const alertError = (summary: String, detail: String) => {
+        toast.current?.show({
+            severity: "error",
+            summary: summary,
+            detail: detail,
+        });
+    };
+
+    const alertSuccess = (summary: String, detail: String) => {
+        toast.current?.show({
+            severity: "success",
+            summary: summary,
+            detail: detail,
+        });
+    };
+
+  // const handleRegister = () => {
+  //   if (password !== confirmPassword) {
+  //     setPasswordMatchError(true);
+  //     return;
+  //   }
+  //   setPasswordMatchError(false);
+  //
+  //   console.log('Registering with:', firstName, lastName, email, username, password);
+  //   window.location.href = '/login';
+  // };
+
+    const handleRegister = async(e: MouseEvent) => {
+        e.preventDefault();
+
+        if(!isValid) {
+            alertError("Invalid Details", 
+                "Please check all the fields and try again.");
+            return;
+        }
+        setLoading(true);
+
+        try {
+            const response = await fetch(REGISTER_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    // Data needs to go here
+                    "firstName" : firstName,
+                    "lastName" : lastName,
+                    "username" : username,
+                    "email" : email,
+                    "password" : hashPassword(password),
+                })
+            });
+
+            const data = await response.json();
+            if (response.status === 200){
+                alertSuccess("Registration Successful", 
+                    "Redirection to OTP Verification...");
+                // console.log(data); JUST for checking
+                secureLocalStorage.setItem("registerToken", data["SECRET_TOKEN"]);
+                secureLocalStorage.setItem("registerEmail", email);
+
+                setTimeout(() => {
+                    router.push("/register/verify");
+                }, 1000);
+            } else if (response.status === 500){
+
+            } else if (data.message !== undefined || data.message !== null){
+                alertError("Registration Failed", data.message);
+            } else {
+                alertError("Oops!", "Something went wrong! Please try again later");
+            }
+        } catch(error){
+            console.log(error);
+            setLoading(false);
+            alertError("Oops!", "Something went wrong. Please try again.")
+            return;
+        }
+
+        setLoading(false);
+    }
 
   return (
     <div className="bg-black min-h-screen flex items-center justify-center">
