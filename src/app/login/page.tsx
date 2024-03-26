@@ -1,7 +1,7 @@
 "use client"
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { z } from "zod";
 
 import { Toast } from 'primereact/toast';
@@ -12,6 +12,11 @@ import secureLocalStorage from 'react-secure-storage';
 import hashPassword from '../_utils/hash';
 
 const Login = () => {
+
+    useEffect(() => {
+        secureLocalStorage.clear();
+    }, []);
+
     const [userEmail, setUserEmail] = useState('');
     const [userPassword, setUserPassword] = useState('');
 
