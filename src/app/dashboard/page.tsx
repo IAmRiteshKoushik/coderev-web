@@ -1,6 +1,5 @@
 "use client"
 import { useRouter } from 'next/navigation';
-import Link from "next/link";
 import { useState, useRef, useEffect } from 'react';
 
 import { Skeleton } from "primereact/skeleton";
@@ -11,6 +10,11 @@ import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/lara-light-blue/theme.css"
 import 'primeicons/primeicons.css';
 import secureLocalStorage from 'react-secure-storage';
+
+import RepositoryCard from './_component/RepositoryCard';
+
+// Test Data
+import { projectData } from '../_utils/data';
 
 interface Language {
     name: string,
@@ -36,7 +40,6 @@ const Dashboard = () => {
     // Animation states
     const [loadProfile, setLoadProfile] = useState(false);
     const [loadUpload, setLoadUpload] = useState(false);
-    const [loadLanguage, setLoadLanguage] = useState(false);
 
     const router = useRouter();
 
@@ -46,7 +49,7 @@ const Dashboard = () => {
         router.replace("/login");
     }
 
-    const redirectToUpload = async () => {
+    const redirectToUpload = () => {
         setLoadUpload(true);
         setTimeout(() => {
             setLoadUpload(false);
@@ -54,7 +57,7 @@ const Dashboard = () => {
         }, 500);
     }
 
-    const redirectToEditProfile = async () => {
+    const redirectToEditProfile = () => {
         setLoadProfile(true);
         setTimeout(() => {
             setLoadProfile(false);
@@ -63,8 +66,8 @@ const Dashboard = () => {
     }
 
     const filterRepositories = async (tag: string) => {
-        setLoadLanguage(true);
         // Logic for filtering - async/await syntax
+        
     }
 
     return(
@@ -93,7 +96,8 @@ const Dashboard = () => {
                 </div>
             </div>            
             {/* Projects Display */}
-            <div className='bg-slate-100 h-screen w-4/5'>
+            <div className='bg-white h-screen w-4/5 overflow-scroll'>
+                {/* Headers */}
                 <div>
                     <h1 className="antialiased text-6xl pt-10 pl-10">Welcome to CodeVet</h1>
                     <h3 className='anitaliased pl-20 py-2'>
@@ -113,7 +117,6 @@ const Dashboard = () => {
                             placeholder="Language"
                             className='mx-2 w-48'
                             showClear
-                            loading={loadLanguage}
                         />
                         <Button
                             label="New"
@@ -122,6 +125,18 @@ const Dashboard = () => {
                             onClick={redirectToUpload}
                         ></Button>
                     </div>
+                </div>
+                {/* RepositoryCards */}
+                <div className='flex flex-col items-center justify-center'>
+                    {projectData.map((project) => (
+                        <RepositoryCard 
+                            key={""}
+                            title={project.title}
+                            blurb={project.desc}
+                            tags={project.tags}
+                            time={project.lastUpdate}
+                        />
+                    ))}                
                 </div>
             </div>
         </main>
