@@ -63,8 +63,8 @@ const Login = () => {
                     "Content-type": "application/json"
                 },
                 body: JSON.stringify({
-                    userEmail: userEmail,
-                    userPassword: hashPassword(userPassword),
+                    email: userEmail,
+                    password: hashPassword(userPassword),
                 }),
             });
 
@@ -74,9 +74,12 @@ const Login = () => {
                 alertSuccess("Login Successful!", "Redirecting to Dashboard...");
                 secureLocalStorage.clear();
                 secureLocalStorage.setItem("userAccess", data["SECRET_TOKEN"]);
-                secureLocalStorage.setItem("currentUser", JSON.stringify({
-                    // Response data goes here
-                }));
+                secureLocalStorage.setItem("name", 
+                    data["firstName"] + " " + data["lastName"]);
+                secureLocalStorage.setItem("email", data["email"]);
+                secureLocalStorage.setItem("projectCount", data["projectCount"]);
+                secureLocalStorage.setItem("projectData", data["projectData"]);
+
                 setTimeout(() => {
                     router.push("/dashboard");
                 }, 2000);
@@ -85,7 +88,7 @@ const Login = () => {
             // } else if (data.message === undefined || data.message === null){
             //     alertError("Oops!", "Something went wrong! Please try again later!");
             } else {
-                alertError("Oops!", "Something went wrong! Please try again later!");
+                alertError("Oops!", data.message);
             }
         } catch (error){
             console.log(error);
