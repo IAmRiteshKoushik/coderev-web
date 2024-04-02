@@ -27,10 +27,8 @@ const Register = () => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [userEmail, setUserEmail] = useState('');
-    const [username, setUsername] = useState('');
     const [userPassword, setUserPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [loading, setLoading] = useState(false);
 
     const router = useRouter();
 
@@ -96,10 +94,8 @@ const Register = () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    // Data needs to go here
                     "firstName" : firstName,
                     "lastName" : lastName,
-                    "username" : username,
                     "email" : userEmail,
                     "password" : hashPassword(userPassword),
                 })
@@ -107,30 +103,20 @@ const Register = () => {
 
             const data = await response.json();
             if (response.status === 200){
-                alertSuccess("Registration Successful", 
-                    "Redirection to OTP Verification...");
-                // console.log(data); JUST for checking
-                secureLocalStorage.setItem("registerToken", data["SECRET_TOKEN"]);
-                secureLocalStorage.setItem("registerEmail", userEmail);
-
+                alertSuccess("Registration Successful", data.message);
                 setTimeout(() => {
-                    router.push("/register/verify");
+                    router.push("/login");
                 }, 1000);
             } else if (response.status === 500){
-
-            } else if (data.message !== undefined || data.message !== null){
                 alertError("Registration Failed", data.message);
             } else {
-                alertError("Oops!", "Something went wrong! Please try again later");
+                alertError("Registration Failed", data.message);
             }
         } catch(error){
             console.log(error);
-            setLoading(false);
             alertError("Oops!", "Something went wrong. Please try again.")
             return;
         }
-
-        setLoading(false);
     }
 
   return (
