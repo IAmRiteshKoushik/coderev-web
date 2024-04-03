@@ -7,11 +7,13 @@ import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 
 interface propsToRepositoryCard{
-    key: string,
-    title: string,
-    blurb: string,
-    tags: string[],
-    time: string,
+    key:        string,
+    title:      string,
+    blurb:      string,
+    tags:       string[],
+    time:       string,
+    callback:   () => void,
+    openRepo:   () => void,
 }
 
 const RepositoryCard = (props: propsToRepositoryCard): JSX.Element => {
@@ -25,10 +27,18 @@ const RepositoryCard = (props: propsToRepositoryCard): JSX.Element => {
                     <h1 className="font-semibold text-2xl text-blue-700">{props.title + "/"}</h1> 
                     <span className="text-gray-500 text-sm">{"Last Updated: " + props.time}</span>
                 </div>
-                <Button
-                    label="Open Repository"
-                    severity="success"
-                />
+                <div className="flex gap-x-2">
+                    <Button
+                        label="Open Repository"
+                        severity="success"
+                        onClick={props.openRepo}
+                    />
+                    <Button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        onClick={props.callback}
+                    />
+                </div>
             </div>
             {/* Details */}
             <div>
