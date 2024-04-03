@@ -10,8 +10,7 @@ import { useMountEffect } from 'primereact/hooks';
 import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import secureLocalStorage from 'react-secure-storage';
-
-import { ADD_PROJECT_URL } from '@/app/_utils/constants';
+import { CREATE_PROJECT_URL } from '@/app/_utils/constants';
 
 const NewProject = () => {
 
@@ -35,18 +34,6 @@ const NewProject = () => {
     const toast = useRef<Toast>(null);
     const router = useRouter();
 
-    // Here, there be dragons
-    const [folderInput, setFolderInput] = useState<any>(null);
-    const otherAtt = {
-        directory: "",
-        webkitdirectory: ""
-    };
-    const handleUpload = async (e: any) => {
-        e.preventDefault();
-        setFolderInput(e.target.value)
-        console.log(folderInput);
-    }
-
     const alertError = (summary: string, detail: string) => {
         toast.current?.show({
             severity: 'error',
@@ -63,12 +50,18 @@ const NewProject = () => {
         });
     };
 
+    const alertInfo = (summary: string, detail: string) => {
+        toast.current?.show({
+            severity: 'info',
+            summary: summary,
+            detail: detail,
+        });
+    };
     // Validators
     const isValidRepoName = z.string().min(4).max(25).safeParse(repositoryName);
     const isValidDescription = z.string().max(280).safeParse(repositoryDesc);
 
-    const createRepository = async (e: any) => {
-        e.preventDefault();
+    const createRepository = async () => {
 
         // Guard clauses
         if (!isValidRepoName.success){
@@ -79,23 +72,27 @@ const NewProject = () => {
             alertError('Description Too Long!', 'Your description must be under 280 characters.')
             return;
         }
-        // Browser cache has been cleared, missing token
+
         // Throw the user out and ask to login again
         if (token === undefined || token === null){
             alertError("Error", "Browser cache has been cleared!")
             secureLocalStorage.clear();
             router.replace("/login");
+            return;
         }
         
         try {
-            const response = await fetch(ADD_PROJECT_URL, {
+            alertInfo("Creating Repository", "Please do not leave this page.");
+            const response = await fetch(CREATE_PROJECT_URL, {
                 method: "POST",
                 headers: {
                     "Content-type": "application/json",
                     "Authorization" : token? "Bearer " + token : "none" 
                 },
                 body: JSON.stringify({
-
+                    projectName: repositoryName,
+                    projectDesc: repositoryDesc,
+                    email: secureLocalStorage.getItem("email"),
                 }),
             });
 
@@ -121,12 +118,13 @@ const NewProject = () => {
 
     return(
         <main className='flex flex-col items-center justify-center bg-slate-100'>
+            <Toast position='bottom-center' ref={toast} />
             <div className='w-3/5 bg-white h-screen pt-10 pl-10 pr-10'>
                 {/* Headers */}
                 <h1 className='font-semibold text-4xl'>Create a new repository</h1>
                 <p className='text-wrap w-4/5 my-1 text-gray-500 text-md'>A repository contains all of your project files, code reviews and recommendation history.</p>
                 {/* Form */}
-                <div>
+                <div className='flex flex-col gap-y-3'>
                     <Messages ref={msgs}/>
                     <div>
                         <h2 className='font-semibold text-base'>Repository Name</h2>
@@ -135,8 +133,8 @@ const NewProject = () => {
                                 type="text"
                                 placeholder='4-25 Character Names'
                                 onChange={(e) => setRepositoryName(e.target.value)}
-                                className={"block text-lg w-full rounded-md py-2 px-2 text-black shadow-sm ring-1 ring-inset ring-bGray placeholder:text-gray-400 sm:text-md sm:leading-6 !outline-none" +
-                                    (!isValidRepoName.success && repositoryName ? ' ring-red-500' : isValidRepoName.success && repositoryName ? ' ring-green-500' : ' ring-bGray')}
+                                className={"block text-lg w-full rounded-md py-2 px-2 text-black shadow-sm ring-1 ring-inset ring-bGray placeholder:text-gray-400 sm:text-md sm:leading-6 !outline-none" 
+                                    + (!isValidRepoName.success && repositoryName ? ' ring-red-500' : isValidRepoName.success && repositoryName ? ' ring-green-500' : ' ring-bGray')}
                                 required
                             />
                         </div>
@@ -157,7 +155,7 @@ const NewProject = () => {
                         />
                     </div>
                     <Button
-                        label="Create Repository"
+                        label="Create New Repository"
                         severity="success"
                         onClick={createRepository}
                     />
