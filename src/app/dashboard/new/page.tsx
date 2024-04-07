@@ -101,7 +101,9 @@ const NewProject = () => {
                 alertSuccess("Repository Created!", "Redirecting to repository page...");
                 secureLocalStorage.setItem("projects", data.projects);
                 secureLocalStorage.setItem("projectCount", data.projectCount);
-                router.back();
+                setTimeout(() => {
+                    router.replace("/dashboard");
+                }, 3000);
             } else if (response.status === 500){
                 alertError("Oops!", "Something went wrong! Please try again later!");
             } else if (data.message === undefined || data.message === null){

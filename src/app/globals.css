@@ -47,3 +47,8 @@ body {
 .markdown > * {
     all: revert;
 }
+
+/* Suppressing nextjs errors */
+nextjs-portal {
+    display: none;
+}
