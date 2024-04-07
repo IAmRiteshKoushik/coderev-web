@@ -1,4 +1,4 @@
-# Efficnet Code Review Automation Tool (Client) 
+# Efficient Code Review Automation Tool (Client) 
 This is project is a tool designed to upload Python, Java or Javascript projects to AWS's Codeguru Reviewer Service and provide Security and Code Quality reccomendations for the user.
 This repository contains the frontend deployment for the project.
 

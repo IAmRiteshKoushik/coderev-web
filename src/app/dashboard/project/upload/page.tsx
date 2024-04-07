@@ -1,19 +1,14 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Toast } from "primereact/toast";
 import secureLocalStorage from "react-secure-storage";
 import { FileUpload, FileUploadHandlerEvent } from "primereact/fileupload";
+import { Button } from "primereact/button";
+import "primereact/resources/primereact.min.css";
+import "primereact/resources/themes/lara-light-blue/theme.css"
 
-import FileTree from "../../_components/FileTree";
 import { UPLOAD_TO_SERVER_URL } from "@/app/_utils/constants";
-
-const sampleFile: string[] = ["file1.py", "file2.py", "file3.py", "file4.py",
-        "file5.py", "file6.py", "file7.py", "file8.py",
-        "file9.py", "file10.py", "file11.py", "file12.py",
-        "file13.py", "file14.py", "file15.py", "file16.py",
-];
-
 
 const UploadPage = () => {
     const toast = useRef<Toast>(null);
@@ -46,16 +41,20 @@ const UploadPage = () => {
                 alertError("Can't Upload", "Only Python, Java and JavaScript are supported");
                 return; 
             } 
-            formData.append(files[i].name, files[i]);
+            formData.append('files', files[i]);
         }
+        console.log(formData);
 
         // Actually sending the request
         try {
             const response = await fetch(UPLOAD_TO_SERVER_URL, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "multipart/form-data",
                     "Authorization": "Bearer " + secureLocalStorage.getItem("userAccess"),
+                    "X-Additional-Info-Mail": "riteshkoushik39@gmail.com",
+                    "X-Additional-Info-ProjectId": "660c3b95228a75ccd510a2a7",
+                    // "X-Additional-Info-Mail": "" + secureLocalStorage.getItem("email"),
+                    // "X-Additional-Info-ProjectId": "" + secureLocalStorage.getItem("projectId"),
                 },
                 body: formData,
             });
@@ -72,51 +71,29 @@ const UploadPage = () => {
     };
 
     return(
-        <main className="flex justify-center items-center">
+        <main className="flex justify-center items-center h-dvh">
             <Toast ref={toast} position="bottom-center" />
-            <div className="flex w-4/5 border-2 border-black overflow-clip">
-
-                {/* Filetree */}
-                <div className="w-1/4 border-2 border-black">
-                    <FileTree 
-                        active={-1} 
-                        files={sampleFile}
-                        clickable={false}
-                    />
-                </div> 
-
+            <div className="flex w-4/5 overflow-clip">
                 {/* Upload Component */}
-                <div className="flex items-center justify-center w-full h-full scroll-y-scroll">
+                <div className="flex flex-col items-center justify-center w-full h-full gap-y-2">
                     <FileUpload 
-                        name="code-files"
+                        name="files"
                         url={UPLOAD_TO_SERVER_URL}
                         multiple
                         accept=".js, .ts, .java, .py"
                         maxFileSize={5000000}
                         emptyTemplate={
-                            <p className="m=0">You can only upload Python, JavaScript and Java files.</p>
+                            <p className="m=0">You can only upload Python, JavaScript and Java files.
+                            If you upload a file whose filename already exists then it will be replace with the new file.</p>
                         }
                         customUpload
                         uploadHandler={handleUpload}
-                        withCredentials={true}
                     />
-                    {/*<input 
-                            type="file"
-                            accept=".js, .ts, .java, .py"
-                            onChange={(e) => { setFiles(e.target.files) }}
-                            multiple
-                            className="bg-blue-700"
-                        />
-                        <Button 
-                            icon="pi pi-check-circle"
-                            label="Confirm" 
-                        />
-                        <Button 
-                            icon="pi pi-times-circle"
-                            label="Cancel"
-                        />*/}
+                    <Button 
+                        label="Go Back"
+                        onClick={() => router.back()}
+                    />
                 </div>
-
             </div>
         </main>
     );
