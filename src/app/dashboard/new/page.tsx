@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { z } from "zod";
 
 import { Toast } from "primereact/toast";
@@ -10,6 +10,7 @@ import { useMountEffect } from 'primereact/hooks';
 import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import secureLocalStorage from 'react-secure-storage';
+
 import { CREATE_PROJECT_URL } from '@/app/_utils/constants';
 
 const NewProject = () => {
@@ -27,7 +28,7 @@ const NewProject = () => {
             severity: 'info',
             summary: 'Info',
             detail: "CodeVet currently supports only Python, Java, JavaScript"
-                + " and TypeScript code. More support coming soon!",
+                + " code. More support coming soon!",
             closable: false,
         });
     })
@@ -82,7 +83,6 @@ const NewProject = () => {
         }
         
         try {
-            alertInfo("Creating Repository", "Please do not leave this page.");
             const response = await fetch(CREATE_PROJECT_URL, {
                 method: "POST",
                 headers: {
@@ -99,10 +99,9 @@ const NewProject = () => {
             const data = await response.json();
             if (response.status === 200){
                 alertSuccess("Repository Created!", "Redirecting to repository page...");
-                // Will be added after deciding the project page
-                // setTimeout(() => {
-                //     router.replace("/");
-                // })
+                secureLocalStorage.setItem("projects", data.projects);
+                secureLocalStorage.setItem("projectCount", data.projectCount);
+                router.back();
             } else if (response.status === 500){
                 alertError("Oops!", "Something went wrong! Please try again later!");
             } else if (data.message === undefined || data.message === null){
@@ -142,7 +141,6 @@ const NewProject = () => {
                     </div>
                     <div className='flex items-center'>
                         <h2 className='font-semibold text-base'>Description &nbsp;</h2>
-                        <span className='font-semibold text-gray-500 text-sm'>(optional)</span>
                     </div>
                     <div>
                         <input
@@ -158,6 +156,11 @@ const NewProject = () => {
                         label="Create New Repository"
                         severity="success"
                         onClick={createRepository}
+                    />
+                    <Button
+                        label="Cancel"
+                        severity="danger"
+                        onClick={() => router.push("/dashboard")}
                     />
                 </div>
             </div>
