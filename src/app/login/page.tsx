@@ -77,16 +77,14 @@ const Login = () => {
                 secureLocalStorage.setItem("name", 
                     data["firstName"] + " " + data["lastName"]);
                 secureLocalStorage.setItem("email", data["email"]);
-                secureLocalStorage.setItem("projectCount", data["projectCount"]);
-                secureLocalStorage.setItem("projectData", data["projectData"]);
+                secureLocalStorage.setItem("projectCount", data["count"]);
+                secureLocalStorage.setItem("projectData", data["projects"]);
 
                 setTimeout(() => {
                     router.push("/dashboard");
                 }, 2000);
             } else if (response.status === 500){
                 alertError("Oops!", "Something went wrong! Please try again later!");
-            // } else if (data.message === undefined || data.message === null){
-            //     alertError("Oops!", "Something went wrong! Please try again later!");
             } else {
                 alertError("Oops!", data.message);
             }
