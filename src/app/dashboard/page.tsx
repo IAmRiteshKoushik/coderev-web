@@ -7,16 +7,13 @@ import { Skeleton } from "primereact/skeleton";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
-import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/lara-light-blue/theme.css"
 import 'primeicons/primeicons.css';
 import secureLocalStorage from 'react-secure-storage';
 
-import RepositoryCard from './_component/RepositoryCard';
-
-// Test Data
-import { projectData } from '../_utils/data';
+import RepositoryCard from './_components/RepositoryCard';
+import { GET_ALL_PROJECTS_URL } from '../_utils/constants';
 
 interface Language {
     name: string,
@@ -26,12 +23,51 @@ interface Language {
 const Dashboard = () => {
 
     useEffect(() => {
-    }, []);
+        const getDashboard = async () => {
+            try {
+                const response = await fetch(GET_ALL_PROJECTS_URL, {
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json",
+                        "Authorization": `Bearer ${secureLocalStorage.getItem("userAccess")}`,
+                    }
+                });
+                const data = await response.json();
+                if (response.status === 200){
+                    secureLocalStorage.setItem("projectCount", data["projectCount"]);
+                    secureLocalStorage.setItem("projectData", data["projectData"]);
+                    return;
+                } else if (response.status === 500){
+                    alertError("Error", "InternalServerError! Please try again.");
+                    return;
+                } else {
+                    alertError("Error", "Could not handle request. Please try again.");
+                    return;
+                }
+            } catch (error){
+                console.log(error);
+                return;
+            }
+        };
+        getDashboard();
+    }, []); // Calling the function on mount
     
     const toast = useRef<Toast>(null);
-    const [fullName, setFullName] = useState("Ritesh Koushik");
-    const [userEmail, setUserEmail] = useState("riteshkoushik39@gmail.com");
-    const [projectCount, setProjectCount] = useState(secureLocalStorage.getItem("projectCount"));
+    const [fullName, setFullName] = useState(
+        secureLocalStorage.getItem("name")
+    );
+    const [userEmail, setUserEmail] = useState(
+        secureLocalStorage.getItem("email")
+    );
+    const [projectCount, setProjectCount] = useState(
+        secureLocalStorage.getItem("projectCount")
+    );
+    const [projectData, setProjectData] = useState(
+        secureLocalStorage.getItem("projectData")
+    );
+    const [registerToken, setRegisterToken] = useState(
+        secureLocalStorage.getItem("userAcces")
+    );
     const [visible, setVisible] = useState(false);
     const [selectLanguage, setSelectLanguage] = useState<Language | null>(null);
     const languages: Language[] = [
@@ -40,11 +76,20 @@ const Dashboard = () => {
         { name: "Python", code: ".py" },
         { name: "TypeScript", code: ".ts" },
     ]
-
-    // Animation states
-    const [loadProfile, setLoadProfile] = useState(false);
-    const [loadUpload, setLoadUpload] = useState(false);
     const router = useRouter();
+
+    // Getting information out of secureLocalStorage
+    useEffect(() => {
+        const nameCheck = fullName === secureLocalStorage.getItem("name") && !null;
+        const emailCheck = userEmail === secureLocalStorage.getItem("email") && !null;
+        const countCheck = projectCount === secureLocalStorage.getItem("projectCount") && !null;
+        const dataCheck = projectData === secureLocalStorage.getItem("projectData") && !null;
+        if(!nameCheck || !emailCheck || !countCheck || !dataCheck){
+            console.log("Problem in data field in the backend");
+            secureLocalStorage.clear();
+            router.replace("/login");
+        }
+    }, [fullName, userEmail, projectData, projectCount, router]);
 
     const alertError = (summary: string, detail: string) => {
         toast.current?.show({
@@ -76,19 +121,11 @@ const Dashboard = () => {
     }
 
     const redirectToUpload = () => {
-        setLoadUpload(true);
-        setTimeout(() => {
-            setLoadUpload(false);
-            router.push("/dashboard/new");
-        }, 500);
+        router.push("/dashboard/new");
     }
 
     const redirectToEditProfile = () => {
-        setLoadProfile(true);
-        setTimeout(() => {
-            setLoadProfile(false);
-            router.push("/dashboard/editProfile");
-        }, 500);
+        router.push("/dashboard/editProfile");
     }
 
     const searchRepositories = async (search: string) => {
@@ -117,28 +154,22 @@ const Dashboard = () => {
         <main className='flex'>
             {/* Notification Toast */}
             <Toast position='bottom-center' ref={toast}/>
-            {/* Confirm Before Deletion */}
-            <ConfirmDialog visible={visible} 
-            onHide={() => (setVisible(false))} message="Are you sure you want to proceed?"
-            header="Confirmation" icon="pi pi-exclamation-triangle" 
-            accept={() => (acceptDeletion("Hello For Now"))}
-            reject={rejectDeletion}/>
+
             {/* Profile Sidebar */}
             <div className='bg-[#F7F9FA] h-screen w-1/5 sicky flex flex-col items-center justify-center'>
                 {/* Profile Photo */}
                 <Skeleton size="15rem"></Skeleton>
                 <div className='w-4/5 flex flex-col items-center justify-center gap-y-2 pb-2'>
-                    <p className='antialiased text-2xl pt-2'>{fullName}</p>
+                    <p className='antialiased text-2xl pt-2'>{fullName?.toString()}</p>
                     <Button 
                         label="Edit Profile" 
                         icon="pi pi-user-edit" 
-                        loading={loadProfile} 
                         onClick={redirectToEditProfile}
                         className='w-3/5' 
                     />
                     <p className='w-4/5'>
                         <i className='pi pi-link mr-2' />
-                        <span>{userEmail}</span>
+                        <span>{userEmail?.toString()}</span>
                     </p>
                     <p className='w-4/5'>
                         <i className='pi pi-database mr-2' />
@@ -175,7 +206,6 @@ const Dashboard = () => {
                         <Button
                             label="New"
                             icon="pi pi-book"
-                            loading={loadUpload}
                             onClick={redirectToUpload}
                         ></Button>
                     </div>
@@ -186,9 +216,8 @@ const Dashboard = () => {
                         <div className='m-20 border-2 border-gray-500 rounded-md h-3/5 flex flex-col justify-center items-center gap-y-4'>
                             <p>Ready to start reviewing ? Create a new repository and bring over your code for a health check</p>
                             <Button
-                                label="New"
+                                label="New Repository"
                                 icon="pi pi-book"
-                                loading={loadUpload}
                                 onClick={redirectToUpload}
                             ></Button>
                         </div>
