@@ -5,16 +5,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Toast } from "primereact/toast";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
-import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
-import "primereact/resources/primereact.min.css";
+import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'; 
+import "primereact/resources/primereact.min.css"; 
 import "primereact/resources/themes/lara-light-blue/theme.css"
 import 'primeicons/primeicons.css';
 import secureLocalStorage from 'react-secure-storage';
 
 import RepositoryCard from './_components/RepositoryCard';
-import { DELETE_PROJECT_URL, 
-    GET_ALL_PROJECTS_URL, 
-    GET_PROJECT_URL } from '../_utils/constants';
+import { GET_ALL_PROJECTS_URL, GET_PROJECT_URL } from '../_utils/constants';
 
 interface Language {
     name: string,
@@ -95,13 +93,6 @@ const Dashboard = () => {
     }, [fullName, userEmail, projectData, accessToken, projectCount, router]);
 
     // Alerts
-    const alertError = (summary: string, detail: string) => {
-        toast.current?.show({
-            severity: 'error',
-            summary: summary,
-            detail: detail,
-        });
-    };
     const alertSuccess = (summary: string, detail: string) => {
         toast.current?.show({
             severity: 'success',
@@ -109,7 +100,13 @@ const Dashboard = () => {
             detail: detail,
         });
     };
-
+    const alertError = (summary: string, detail: string) => {
+        toast.current?.show({
+            severity: 'error',
+            summary: summary,
+            detail: detail,
+        });
+    };
     const handleLogout = async () => {
         secureLocalStorage.clear();
         router.replace("/login");
@@ -117,9 +114,9 @@ const Dashboard = () => {
     const redirectToUpload = () => {
         router.push("/dashboard/new");
     }
-    const redirectToEditProfile = () => {
-        router.push("/dashboard/editProfile");
-    }
+    // const redirectToEditProfile = () => {
+    //     router.push("/dashboard/editProfile");
+    // }
     const searchRepositories = async (search: string) => {
         // Logic for searching 
     }
@@ -128,8 +125,10 @@ const Dashboard = () => {
     }
 
     const openRepository = async(projectId: string) => {
+        console.log(projectId);
         try {
             const response = await fetch(GET_PROJECT_URL, {
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${accessToken}`,
@@ -142,39 +141,18 @@ const Dashboard = () => {
             const data = response.json();
             console.log(data);
             if(response.status === 200){
-                secureLocalStorage.setItem("currentProject", data.projctId);
-                secureLocalStorage.setItem("filesInProject", data.fileArray);
+                secureLocalStorage.setItem("activeProject", projectId);
+                secureLocalStorage.setItem("files", data.fileData);
+                setTimeout(() => {
+                    alertSuccess("Success", "Taking you to repository");
+                    router.push("/dashboard/project");
+                }, 2000);
             } else if (response.status === 500){
                 alertError("Error", "The server seems to unreachable now. Try again in a while");
             }
         } catch (error){
+            console.log(error);
             alertError("Error", "Could not open repository at the moment");
-        }
-    }
-
-    const deleteRepository = async(projectId: string) => {
-        try {
-            const response = await fetch(DELETE_PROJECT_URL, {
-                headers: {
-                    "Content-type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    "email": userEmail,
-                    "projectId": projectId,
-                }),
-            });
-            // const data = await response.json();
-            if (response.status === 500){
-                alertError("Error!", "Repository deletion failed. Try again.");
-                return;
-            } else if (response.status === 200){
-                alertSuccess("Success!", "Repository has been deleted!");
-                window.location.reload();
-                return;
-            }
-        } catch (error){
-            alertError("Error!", "Repository deletion failed");
         }
     }
 
@@ -186,12 +164,6 @@ const Dashboard = () => {
             <div className='bg-[#F7F9FA] h-screen w-1/5 sicky flex flex-col items-center justify-center'>
                 <div className='w-4/5 flex flex-col items-center justify-center gap-y-2 pb-2'>
                     <p className='antialiased text-2xl pt-2'>{fullName?.toString()}</p>
-                    <Button 
-                        label="Edit Profile" 
-                        icon="pi pi-user-edit" 
-                        onClick={redirectToEditProfile}
-                        className='w-3/5' 
-                    />
                     <p className='w-4/5'>
                         <i className='pi pi-link mr-2' />
                         <span>{userEmail?.toString()}</span>
@@ -260,7 +232,6 @@ const Dashboard = () => {
                                     blurb={project.description}
                                     tags={project.tags}
                                     openRepo={() => openRepository(project.id)}
-                                    deleteRepo={() => deleteRepository(project.id)}
                                 />
                             ))}                
                         </div>

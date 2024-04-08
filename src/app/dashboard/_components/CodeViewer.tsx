@@ -3,7 +3,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 interface CodeContent {
-    lines: string[],
+    lines: string,
     filetype: "Python" | "JavaScript" | "Java" | "Markdown",
     start: number, 
     end: number
@@ -30,7 +30,7 @@ const CodeViewer = (props: CodeContent): JSX.Element => {
                     return { style };
                 }}
             >
-                {props.lines.join("\n")}
+                {props.lines}
             </SyntaxHighlighter>
         </div>
     );

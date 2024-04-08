@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import secureLocalStorage from "react-secure-storage";
 import { FileUpload, FileUploadHandlerEvent } from "primereact/fileupload";
@@ -13,6 +13,13 @@ import { UPLOAD_TO_SERVER_URL } from "@/app/_utils/constants";
 const UploadPage = () => {
     const toast = useRef<Toast>(null);
     const router = useRouter();
+    const [projectId, setProjectId] = useState(secureLocalStorage.getItem("activeProject"));
+    if(projectId === null){
+        // Throw user out for clearing cache or tampering with secureLocalStorage
+        // Otherwise it cannot be null
+        secureLocalStorage.clear();
+        router.replace("/login");
+    }
 
     const alertError = (summary: string, detail: string) => {
         toast.current?.show({
@@ -41,7 +48,7 @@ const UploadPage = () => {
                 alertError("Can't Upload", "Only Python, Java and JavaScript are supported");
                 return; 
             } 
-            formData.append('files', files[i]);
+            formData.append('files', files[i], `${projectId}-${files[i].name}`);
         }
         console.log(formData);
 
@@ -51,17 +58,18 @@ const UploadPage = () => {
                 method: "POST",
                 headers: {
                     "Authorization": "Bearer " + secureLocalStorage.getItem("userAccess"),
-                    "X-Additional-Info-Mail": "riteshkoushik39@gmail.com",
-                    "X-Additional-Info-ProjectId": "660c3b95228a75ccd510a2a7",
-                    // "X-Additional-Info-Mail": "" + secureLocalStorage.getItem("email"),
-                    // "X-Additional-Info-ProjectId": "" + secureLocalStorage.getItem("projectId"),
+                    "X-Additional-Info-Mail": "" + secureLocalStorage.getItem("email"),
+                    "X-Additional-Info-ProjectId": "" + secureLocalStorage.getItem("activeProject"),
                 },
                 body: formData,
             });
             const data = await response.json();
             if(response.status === 200){
                 alertSuccess("Upload Success", "Redirecting back to project page.");
-                router.back();
+                secureLocalStorage.setItem("files", data.files);
+                setTimeout(() => {
+                    router.push("/dashboard/project");
+                }, 2000);
                 return;
             }
             alertError("Upload Failed", "Please try again.");
@@ -83,8 +91,8 @@ const UploadPage = () => {
                         accept=".js, .ts, .java, .py"
                         maxFileSize={5000000}
                         emptyTemplate={
-                            <p className="m=0">You can only upload Python, JavaScript and Java files.
-                            If you upload a file whose filename already exists then it will be replace with the new file.</p>
+                            <p className="m=0">You can only upload Python, JavaScript and Java files.<br />
+                            If you upload a file whose filename already exists then it will be replaced.</p>
                         }
                         customUpload
                         uploadHandler={handleUpload}

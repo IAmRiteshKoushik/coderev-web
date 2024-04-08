@@ -11,7 +11,6 @@ interface propsToRepositoryCard{
     blurb:      string,
     tags:       string[],
     openRepo:   () => void,
-    deleteRepo: () => void,
 }
 
 const RepositoryCard = (props: propsToRepositoryCard): JSX.Element => { 
@@ -28,11 +27,6 @@ const RepositoryCard = (props: propsToRepositoryCard): JSX.Element => {
                         label="Open Repository"
                         severity="success"
                         onClick={props.openRepo}
-                    />
-                    <Button
-                        icon="pi pi-trash"
-                        severity="danger"
-                        onClick={props.deleteRepo}
                     />
                 </div>
             </div>
