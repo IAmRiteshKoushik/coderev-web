@@ -14,7 +14,21 @@ alongside the particular file's content for which the recommendation is
 generated.
 
 ## UI Screenshots
-Coming shortly!
+
+1. Registration Screen
+![Registration Screen](./screenshots/registrationPage.png)
+2. Login Screen
+![Login Screen](./screenshots/loginPage.png)
+3. Dashboard Screen
+![Dashboard Screen](./screenshots/dashboardPage.png)
+4. Create Repository Screen
+![Repository Screen](./screenshots/createRepositoryPage.png)
+5. Before Code Review
+![No Review Screen](./screenshots/beforeReview.png)
+6. File Upload Screen
+![Upload Screen](./screenshots/fileUpload.png)
+7. After Code Review
+![With Review Screen](./screenshots/)
 
 ## Getting Started
 1. Clone this repository into your local Linux environment.
