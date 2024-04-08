@@ -5,8 +5,9 @@ import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
 import CodeViewer from "../_components/CodeViewer";
 import secureLocalStorage from "react-secure-storage";
-import { GET_FILE_CONTENTS, GET_PROJECT_URL, CREATE_PROJECT_REVIEW_URL, 
-     } from "@/app/_utils/constants";
+import { GET_FILE_CONTENTS, GET_PROJECT_URL, 
+    CREATE_PROJECT_REVIEW_URL, 
+    CHECK_PROJECT_REVIEW_URL } from "@/app/_utils/constants";
 import "primereact/resources/primereact.min.css"; 
 import "primereact/resources/themes/lara-light-blue/theme.css"
 import 'primeicons/primeicons.css';
@@ -24,7 +25,7 @@ const RepositoryPage = () => {
     
     const [files, setFiles] = useState<any[] | null>(null); // Will receive the file
     const [fileName, setFileName] = useState<string | null>(null);
-    const [fileId, setFileId] = useState(null);
+    const [fileId, setFileId] = useState<string>("");
     const [reviewData, setReviewData] = useState("Select a file to see recommendations");
     const [reviewStatus, setReviewStatus] = useState<"not available" | "pending" | "done">("not available")
     const [fileContent, setFileContent] = useState<string>("\"\"\"Select a file to see contents\"\"\"");
@@ -53,7 +54,6 @@ const RepositoryPage = () => {
                             name: data["fileData"][i]["name"].split("-").slice(1).join(""),
                         });
                     }
-                    console.log(filesTemp);
                     setFiles(filesTemp);
                 } else {
                     console.log("Response did not come", response.status);
@@ -81,7 +81,7 @@ const RepositoryPage = () => {
         });
     };
 
-    const getFileData = async() => {
+    const getFileData = async(fileId: string) => {
         try {
             const response = await fetch(GET_FILE_CONTENTS, {
                 method: "POST",
@@ -154,7 +154,16 @@ const RepositoryPage = () => {
                 }),
             });
             const data = await response.json();
+            if(response.status === 200){
+                setFileId(data.fileId);
+                setFileName(data.fileName);
+                setFileContent(data.fileContent);
+                setReviewStatus(data.reviewStatus);
+                setReviewData(data.fileReviewContent);
+                alertInfo("CodeReview Complete", "The code review has been completed");
+            }
         } catch (error){
+            console.log(error);
             alertError("Oops!", "Could not check if the review exists.")
         }
     }
@@ -177,7 +186,7 @@ const RepositoryPage = () => {
                                 key={file.id}
                                 severity="info"
                                 label={file.name}
-                                onClick={() => getFileData(fileId)}
+                                onClick={() => getFileData(file.id)}
                             />
                         ))}
                     </div>
@@ -199,12 +208,14 @@ const RepositoryPage = () => {
                                     : (reviewStatus === "pending") 
                                     ? <Button 
                                             icon="pi pi-file-edit"
+                                            disabled={false}
                                             severity="info"
                                             label="Get Report"
+                                            onClick={() => checkForReview(fileId)}
                                         />
                                     : <Button 
                                             icon="pi pi-file-edit"
-                                            disabled
+                                            disabled={true}
                                             severity="info"
                                             label="Get Report"
                                         />
@@ -237,15 +248,10 @@ const RepositoryPage = () => {
                             {/* Displaying recommendations */}
                             <CodeViewer 
                                 lines={reviewData}
-                                filetype={"JavaScript"}
+                                filetype={"Markdown"}
                                 start={startLineValue}
                                 end={endLineValue}
                             />
-                            {/*}<ReactMarkdown 
-                                remarkPlugins={[remarkGfm]} 
-                                rehypePlugins={[rehypeRaw]}
-                                className='markdown'
-                            >{reviewData}</ReactMarkdown> */}
                         </div>
                     </div>
                 </div>

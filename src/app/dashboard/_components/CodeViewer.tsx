@@ -20,6 +20,7 @@ const CodeViewer = (props: CodeContent): JSX.Element => {
         <div className='rounded-md'>
             <SyntaxHighlighter language={props.filetype} style={atomOneLight} 
                 showLineNumbers
+                wrapLines
                 wrapLongLines
                 className="leading-5 text-sm"
                 lineProps={lineNumber => {

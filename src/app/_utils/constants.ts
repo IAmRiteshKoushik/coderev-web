@@ -12,7 +12,6 @@ export const GET_ALL_PROJECTS_URL = BASE_URL + "/project/get-all-projects";
 
 export const GET_PROJECT_URL = BASE_URL + "/project/get-project";
 export const CREATE_PROJECT_REVIEW_URL = BASE_URL + "/project/review/project-review";
-
-export const CHECK_FILE_REVIEW_URL = BASE_URL + "/project/review/check-project-review";
+export const CHECK_PROJECT_REVIEW_URL = BASE_URL + "/project/review/check-project-review";
 export const UPLOAD_TO_SERVER_URL = BASE_URL + "/project/upload-files";
 export const GET_FILE_CONTENTS = BASE_URL + "/project/get-file-content";
