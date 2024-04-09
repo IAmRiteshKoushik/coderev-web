@@ -28,7 +28,7 @@ generated.
 6. File Upload Screen
 ![Upload Screen](./screenshots/fileUpload.png)
 7. After Code Review
-![With Review Screen](./screenshots/)
+![With Review Screen](./screenshots/codeReview.jpeg)
 
 ## Getting Started
 1. Clone this repository into your local Linux environment.
